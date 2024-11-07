@@ -1,0 +1,42 @@
+services:
+  app:
+    build:
+      args:
+        user: user
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: laravel
+    container_name: laravel
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - laravel
+  db:
+    image: bitnami/postgresql:16.3.0
+    container_name: laravel-db
+    restart: unless-stopped
+    environment:
+      - POSTGRESQL_DATABASE=${DB_DATABASE}
+      - POSTGRESQL_USERNAME=${DB_USERNAME}
+      - POSTGRESQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./docker-compose/postgresql:/docker-entrypoint-initdb.d
+    networks:
+      - laravel
+  nginx:
+    image: nginx:alpine
+    container_name: laravel-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - laravel
+networks:
+  laravel:
+    driver: bridge
